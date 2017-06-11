@@ -1,0 +1,63 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "3ea52b749369d71b8c50877bcebd8508",
+    "packages": [
+        {
+            "name": "netsilik/cli",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Netsilik/Cli.git",
+                "reference": "287cf8bcf4171dda44c09563306cf653ea5c0b83"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Netsilik/Cli/zipball/287cf8bcf4171dda44c09563306cf653ea5c0b83",
+                "reference": "287cf8bcf4171dda44c09563306cf653ea5c0b83",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.5.0 || ^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Netsilik\\Lib\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "authors": [
+                {
+                    "name": "Jacco-V",
+                    "homepage": "http://netsilik.nl",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Cli script base class.",
+            "homepage": "https://gitlab.com/Netsilik/Cli",
+            "keywords": [
+                "cli"
+            ],
+            "time": "2017-06-11 15:28:27"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "netsilik/cli": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {
+        "php": "^5.5.0 || ^7.0"
+    },
+    "platform-dev": []
+}

@@ -1,0 +1,22 @@
+{
+    "name": "netsilik/lines-of-code-counter",
+    "description": "Standalone utility script for Counting Lines of Code.",
+    "keywords": ["development", "helper", "utility"],
+    "type": "porject",
+    "license": "EUPL-1.2",
+	"homepage": "https://gitlab.com/Netsilik/LinesOfCodeCounter",
+    "authors": [
+        {
+            "name": "Jacco-V",
+            "role": "Developer",
+            "homepage": "http://netsilik.nl"
+        }
+    ],
+	"require": {
+        "php": "^5.5.0 || ^7.0",
+		"netsilik/cli": "dev-master"
+    },
+    "autoload": {
+        "psr-4": { "Netsilik\\Util\\": "app/src/" }
+    }
+}
