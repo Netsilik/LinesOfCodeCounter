@@ -1,7 +1,7 @@
 Lines of Code counter
 =====================
 
-Standalone utility script for Counting Lines of Code.
+Simple utility script for Counting Lines of Code.
 
 ---
 
