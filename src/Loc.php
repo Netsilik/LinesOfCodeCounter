@@ -43,16 +43,14 @@ class Loc extends Cli
 	 */
 	public function main($argc, array $argv)
 	{
-		list($operator, $options) = $this->_parseArguments($argc, $argv, $this->_optionFlags);
-		
-		echo 'Directory: '.print_r($operator, true)."\n";
-		echo 'Options: '.print_r($options, true)."\n";
+		list($operators, $options) = $this->_parseArguments($argc, $argv, $this->_optionFlags);
 		
 		if (in_array('--help', $argv)) {
 			$this->_out[] = '  Usage: loc [OPTION]... DIRECTORY...';
 			$this->_out[] = '  Count the lines of code in the files in the specified DIRECTORY(ies).';
 			$this->_out[] = '';
 			$this->_out[] = '  Mandatory arguments for long options are mandatory for short options too.';
+			$this->_out[] = '    -a, --all                    Include hidden files and directories';
 			$this->_out[] = '    -f, --file-mask=MASK         Process only files that match the file mask';
 			$this->_out[] = '        --help                   Display this help and exit';
 			$this->_out[] = '    -i, --ignore-dir=DIRECTORY   Ignore all files in the directory DIRECTORY';
@@ -64,12 +62,15 @@ class Loc extends Cli
 			$this->_out[] = '  License EUPL-1.2: European Union Public Licence, v. 1.2 <https://joinup.ec.europa.eu/community/eupl/og_page/eupl>.';
 			$this->_out[] = '  This is free software: you are free to change and redistribute it.';
 			$this->_out[] = '  There is NO WARRANTY, to the extent permitted by law.';
-		} elseif ($argc <= 1 || $operator === null) {
+		} elseif ($argc <= 1 || count($operators) === 0) {
 			$this->_out[] = '  Missing directory operand.';
 			$this->_out[] = '  Try \'loc --help\' for more information.';
 			$this->_exitCode = 1;
 		} else {
-			$this->_processDir($operator, $options);
+			foreach ($operators as $index => $operator) {
+				$operators[$index] = rtrim($operator, DIRECTORY_SEPARATOR);
+			}
+			$this->_processDirectories($operators, $options);
 		}
 		$this->_out[] = '';
 		
@@ -90,167 +91,160 @@ class Loc extends Cli
 	 * 
 	 * @return void
 	 */
-	private function _processDir($dir, $options)
+	private function _processDirectories($directories, $options)
 	{
-		if (substr($dir, -1) == DIRECTORY_SEPARATOR) {
-			$dir = substr($dir, 0, -1);
-		}
+		$counted = [
+			'matchedFiles' => 0,
+			'totalFiles' => 0,
+			'hiddenFiles' => 0,
+			'directories' => 1,
 			
-		list($matchedFiles, $totalFiles, $directories, $totalLines, $emptyLines, $codeLines, $commentLines, $totalComments, $fileTypeCount) = $this->_readFileInDir($dir, $options);
+			'totalLines' => 0,
+			'emptyLines' => 0,
+			'codeLines' => 0,
+			'commentLines' => 0,
+			'totalComments' => 0,
 		
+			'fileTypeCount' => [],
+		];
+		
+		$counted = $this->_readFileInDir($directories, $options, $counted);
 		
 		if (count($options['fileMasks']) > 0) {
-			$maxLength = strlen(number_format(max($totalLines, $emptyLines, $codeLines, $commentLines, $totalComments)));
-		
-			$this->_out[] = "Parsed {$matchedFiles} ".($matchedFiles == 1 ? 'file' : 'files').($options['all'] ? ' (including hidden files)' : '')." out of a total of {$totalFiles} ".($totalFiles == 1 ? 'file' : 'files')." in {$directories} ".($directories == 1 ? 'directory' : 'directories').', counted:';
-			$this->_out[] = '  '.str_pad(number_format($totalLines), $maxLength, ' ', STR_PAD_LEFT).' total lines,';
-			$this->_out[] = '  '.str_pad(number_format($emptyLines), $maxLength, ' ', STR_PAD_LEFT).' empty lines,';
-			$this->_out[] = '  '.str_pad(number_format($codeLines), $maxLength, ' ', STR_PAD_LEFT).' lines of code,';
-			$this->_out[] = '  '.str_pad(number_format($commentLines), $maxLength, ' ', STR_PAD_LEFT).' comment lines,';
-			$this->_out[] = '  '.str_pad(number_format($totalComments), $maxLength, ' ', STR_PAD_LEFT).' comments in total.';
+			$maxLength = strlen(number_format(max($counted['totalLines'], $counted['emptyLines'], $counted['codeLines'], $counted['commentLines'], $counted['totalComments'])));
+			
+			$this->_out[] = "Parsed {$counted['matchedFiles']} (" . implode(', ', $options['fileMasks']) .') '.($counted['matchedFiles'] == 1 ? 'file' : 'files').($counted['hiddenFiles'] > 0 ? ' (including '.$counted['hiddenFiles'].' hidden '.($counted['hiddenFiles'] == 1 ? 'file' : 'files').')' : '')." out of a total of {$counted['totalFiles']} ".($counted['totalFiles'] == 1 ? 'file' : 'files').", in {$counted['directories']} ".($counted['directories'] == 1 ? 'directory' : 'directories').' and counted:';
+			$this->_out[] = '  '.str_pad(number_format($counted['totalLines']), $maxLength, ' ', STR_PAD_LEFT).' total lines,';
+			$this->_out[] = '  '.str_pad(number_format($counted['emptyLines']), $maxLength, ' ', STR_PAD_LEFT).' empty lines,';
+			$this->_out[] = '  '.str_pad(number_format($counted['codeLines']), $maxLength, ' ', STR_PAD_LEFT).' lines of code,';
+			$this->_out[] = '  '.str_pad(number_format($counted['commentLines']), $maxLength, ' ', STR_PAD_LEFT).' comment lines,';
+			$this->_out[] = '  '.str_pad(number_format($counted['totalComments']), $maxLength, ' ', STR_PAD_LEFT).' comments in total.';
 			
 		} else {
-			$this->_out[] = "Found a total of {$totalFiles} ".($totalFiles == 1 ? 'file' : 'files').($options['all'] ? ' (including hidden files)' : '')." in {$directories} ".($directories == 1 ? 'directory' : 'directories').', counting:';
+			$this->_out[] = "Found a total of {$counted['totalFiles']} ".($counted['totalFiles'] == 1 ? 'file' : 'files').($options['all'] ? ' (including hidden files)' : '')." in {$counted['directories']} ".($counted['directories'] == 1 ? 'directory' : 'directories').', counting:';
 			
 			$max = 0;
-			foreach ($fileTypeCount as $c) {
+			foreach ($counted['fileTypeCount'] as $c) {
 				$max = max($max, $c);
 			}
 			
 			$maxLength = strlen(number_format($max));
-			$this->_outExt = [];
-			foreach ($fileTypeCount as $t => $c) {
-				$this->_outExt[] = '  '.str_pad(number_format($c), $maxLength, ' ', STR_PAD_LEFT).' '.$t.' '.($c == 1 ? 'file' : 'files');
+			$out = [];
+			foreach ($counted['fileTypeCount'] as $t => $c) {
+				$out[] = '  '.str_pad(number_format($c), $maxLength, ' ', STR_PAD_LEFT).' '.$t.' '.($c == 1 ? 'file' : 'files');
 			}
 			
-			$this->_out[] = implode(','.PHP_EOL, $this->_outExt);
+			$this->_out[] = implode(','.PHP_EOL, $out);
 		}
 	}
 
 	/**
-	 * @param string $dir
+	 * @param array $directories
 	 * @param array $options
 	 * 
 	 * @return array
 	 */
-	private function _readFileInDir($dir, array $options = [])
+	private function _readFileInDir(array $directories, array $options, $counted)
 	{
-		if (false === ($dp = @opendir($dir))) {
-			$this->_error = "  Could not open directory '{$dir}'";
-			return false;
-		}
 		
-		$matchedFiles = 0;
-		$totalFiles = 0;
-		$directories = 1;
-		
-		$totalLines = 0;
-		$emptyLines = 0;
-		$codeLines = 0;
-		$commentLines = 0;
-		$totalComments = 0;
-		
-		$fileTypeCount = array();
-		
-		while (false !== ($node = @readdir($dp))) {
-			if ($node == '.' || $node == '..' || ($node{0} == '.' && !$options['all'])) {
-				continue;
+		foreach ($directories as $directory) {
+			
+			if (false === ($dp = @opendir($directory))) {
+				echo "ERROR: Could not open directory '{$directory}'".PHP_EOL;
+				exit(1);
 			}
 			
-			$dirNode = $dir.DIRECTORY_SEPARATOR.$node;
-			
-			if (is_dir($dirNode)) {
-				echo PHP_EOL.'dirNode: '.ltrim($dirNode, '.')." ($node)".PHP_EOL;
-			
-				
-				$dirMatched = false;
-				foreach ($options['ignoreDirs'] as $ignoreDir) {
-					$trimmed = rtrim($ignoreDir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
-					if ($ignoreDir{0} == DIRECTORY_SEPARATOR) {
-						$regex = '|^'.preg_quote($trimmed, '|').'|';
-					} else {
-						$regex = '|'.preg_quote(DIRECTORY_SEPARATOR.$trimmed, '|').'|';
-					}
-					
-					
-					echo " > preg_match('{$regex}', '".ltrim($dirNode, '.').DIRECTORY_SEPARATOR."') == ".preg_match($regex, ltrim($dirNode, '.').DIRECTORY_SEPARATOR).PHP_EOL;
-					
-					if (1 === preg_match($regex, ltrim($dirNode, '.').DIRECTORY_SEPARATOR)) {
-						$dirMatched = true;
-						break;
-					}
+			while (false !== ($node = @readdir($dp))) {
+				if ($node == '.' || $node == '..' || ($node{0} == '.' && !$options['all'])) {
+					continue;
 				}
 				
-				echo ' -> ';
 				
-				if ($options['recursive'] && !$dirMatched) {
-					
-					echo 'processing'.PHP_EOL;
-					
-					list($mf, $tf, $d, $tl, $el, $loc, $cl, $tc, $ftc) = $this->_readFileInDir($dirNode, $options, false);
-					
-					$matchedFiles += $mf;
-					$totalFiles += $tf;
-					$directories += $d;
-					
-					$totalLines += $tl;
-					$emptyLines += $el;
-					$codeLines += $loc;
-					$commentLines += $cl;
-					$totalComments += $tc;
-					
-					foreach ($ftc as $k => $c) {
-						if (isset($fileTypeCount[$k])) {
-							$fileTypeCount[$k] += $c;
-						} else {
-							$fileTypeCount[$k] = $c;
-						}
+				$pathNode = $directory.DIRECTORY_SEPARATOR.$node;
+				if (is_dir($pathNode)) {
+					if ($options['recursive']) {
+						$counted = $this->_handleDir($options, $pathNode, $counted);
 					}
-				}
-				
-				else { echo 'ignoring'.PHP_EOL; } // Debug only
-				
-			} elseif (is_file($dirNode)) {
-				
-				$totalFiles++;
-				
-				if (false !== ($dotPos = strrpos($node, '.')) && $dotPos > 0) {
-					$fileExt = substr($node, $dotPos + 1);
+				} elseif (is_file($pathNode)) {
+					$counted = $this->_handleFile($options, $pathNode, $counted);
 				} else {
-					$fileExt = $node;
+					$this->_out[] = "WARNING: Unknown node type '{$pathNode}'".PHP_EOL;
 				}
-
-				$fileMatched = false;
-				foreach ($options['fileMasks'] as $fileMask) {
-					if (fnmatch($fileMask, $node)) {
-						$fileMatched = true;
-						break;
-					}
-				}
-				
-				if ($fileMatched) {
-					$matchedFiles++;
-					
-					list($tl, $el, $loc, $cl, $tc) = $this->_parseFile($dirNode);
-					$totalLines += $tl;
-					$emptyLines += $el;
-					$codeLines += $loc;
-					$commentLines += $cl;
-					$totalComments += $tc;
-				} elseif (isset($fileTypeCount[$fileExt])) {
-					$fileTypeCount[$fileExt]++;
-				} else {
-					$fileTypeCount[$fileExt] = 1;
-				}
-			} else {
-				$this->_out = "WARNING: Unknown node type '{$dirNode}'".PHP_EOL;
 			}
+			closedir($dp);
 		}
-		closedir($dp);
 		
-		return array($matchedFiles, $totalFiles, $directories, $totalLines, $emptyLines, $codeLines, $commentLines, $totalComments, $fileTypeCount);
+		
+		return $counted;
 	}
 
+	private function _handleDir(array $options, $directory, $counted)
+	{
+		
+		$processDir = true;
+		foreach ($options['ignoreDirs'] as $ignoreDir) {
+			$trimmed = rtrim($ignoreDir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+			if ($ignoreDir{0} == DIRECTORY_SEPARATOR) {
+				$regex = '/^'.preg_quote($trimmed).'/';
+			} else {
+				$regex = '/'.preg_quote(DIRECTORY_SEPARATOR.$trimmed).'/';
+			}
+			
+			if (1 === preg_match($regex, ltrim($directory, '.').DIRECTORY_SEPARATOR)) {
+				$processDir = false;
+				break;
+			}
+		}
+		
+		if ($processDir) {
+			$counted = $this->_readFileInDir([$directory], $options, $counted);
+			$counted['directories']++;
+		}
+		
+		return $counted;
+	}
+	
+	private function _handleFile($options, $file, $counted)
+	{
+		$counted['totalFiles']++;
+		
+		$basename = basename($file);
+		if (false !== ($dotPos = strrpos($basename, '.')) && $dotPos > 0) {
+			$fileExt = substr($basename, $dotPos + 1);
+		} else {
+			$fileExt = $basename;
+		}
+		
+		$fileMatched = false;
+		foreach ($options['fileMasks'] as $fileMask) {
+			if (fnmatch($fileMask, $basename)) {
+				$fileMatched = true;
+				break;
+			}
+		}
+		
+		if ($fileMatched) {
+			$counted['matchedFiles']++;
+			if ($basename{0} == '.') {
+				$counted['hiddenFiles']++;
+			}
+			
+			list($tl, $el, $loc, $cl, $tc) = $this->_parseFile($file);
+			$counted['totalLines'] += $tl;
+			$counted['emptyLines'] += $el;
+			$counted['codeLines'] += $loc;
+			$counted['commentLines'] += $cl;
+			$counted['totalComments'] += $tc;
+		} else {
+			if (isset($fileTypeCount[$fileExt])) {
+				$counted['fileTypeCount'][$fileExt]++;
+			} else {
+				$counted['fileTypeCount'][$fileExt] = 1;
+			}
+		}
+		return $counted;
+	}
+	
 	/**
 	 * @param string $filname
 	 * 
@@ -280,8 +274,8 @@ class Loc extends Cli
 				continue;
 			}
 			
-			$comment = 0;
 			$code = 0;
+			$comment = 0;
 			
 			$charCount = strlen($line);
 			for ($c = 0; $c < $charCount; $c++) {
@@ -309,7 +303,10 @@ class Loc extends Cli
 							}
 						}
 					case '\\':
-						if (!$bc) { $c++; }
+						if (!$bc) {
+							$c++;
+							break;
+						}
 					case '\'':
 						if (!$bc && !$d) { $s = !$s; }
 					case '"':
