@@ -17,6 +17,6 @@
 		"netsilik/cli": "dev-master"
     },
     "autoload": {
-        "psr-4": { "Netsilik\\Util\\": "app/src/" }
+        "psr-4": { "Netsilik\\Util\\": "src/" }
     }
 }

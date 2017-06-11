@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-
-"php ../src/main.php" "$@"

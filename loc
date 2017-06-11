@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+error_reporting(~0);
+
+if (PHP_SAPI <> 'cli') {
+    echo 'Warning: loc should be invoked via the CLI version of PHP, not the '.PHP_SAPI.' SAPI'.PHP_EOL;
+}
+
+require_once(__DIR__.'/vendor/autoload.php');
+
+$app = new \Netsilik\Util\Loc();
+echo $app->main($argc, $argv);
+
+exit($app->getExitCode());

@@ -6,13 +6,20 @@ use Netsilik\Lib\Cli;
 class Loc extends Cli
 {
 	/**
-	 *  @var array $_optionFlags
+	 * string VERSION
+	 */
+	const VERSION = '1.1.0';
+	
+	/**
+	 * @var array $_optionFlags
 	 */
 	protected $_optionFlags = [
 		'name'  => ['all', 'fileMasks', 'help', 'ignoreDirs', 'recursive', 'version'],
 		'short' => ['a', 'f:', null, 'i:', 'r', null],
 		'long'  => ['all', 'file-mask:', 'help', 'ignore-dir:', 'recursive', 'version'],
 	];
+	
+	private $_exitCode = 0;
 	
 	/**
 	 * @var array $_out
@@ -32,7 +39,7 @@ class Loc extends Cli
 	 * @param int $argc
 	 * @param array $argv
 	 * 
-	 * @return string
+	 * @return int
 	 */
 	public function main($argc, array $argv)
 	{
@@ -41,31 +48,40 @@ class Loc extends Cli
 		echo 'Directory: '.print_r($operator, true)."\n";
 		echo 'Options: '.print_r($options, true)."\n";
 		
-		if ($argc == 1 || $operator === null) {
-			$this->_out[] = '  Missing directory operand.';
-			$this->_out[] = '  Try \'loc --help\' for more information.';
-		} elseif (in_array('--version', $argv)) {
-			$this->_out[] = '  loc v'.VERSION;
-			$this->_out[] = '  Copyright (C) Netsilik.';
-			$this->_out[] = '  License EUPL-1.2: European Union Public Licence, v. 1.2 <https://joinup.ec.europa.eu/community/eupl/og_page/eupl>.';
-			$this->_out[] = '  This is free software: you are free to change and redistribute it.';
-			$this->_out[] = '  There is NO WARRANTY, to the extent permitted by law.';
-		} elseif (in_array('--help', $argv)) {
+		if (in_array('--help', $argv)) {
 			$this->_out[] = '  Usage: loc [OPTION]... DIRECTORY...';
 			$this->_out[] = '  Count the lines of code in the files in the specified DIRECTORY(ies).';
 			$this->_out[] = '';
-			$this->_out[] = '  Mandatory arguments to long options are mandatory for short options too.';
-			$this->_out[] = '    -f, --file-mask              Process only files that match the file mask';
+			$this->_out[] = '  Mandatory arguments for long options are mandatory for short options too.';
+			$this->_out[] = '    -f, --file-mask=MASK         Process only files that match the file mask';
 			$this->_out[] = '        --help                   Display this help and exit';
 			$this->_out[] = '    -i, --ignore-dir=DIRECTORY   Ignore all files in the directory DIRECTORY';
 			$this->_out[] = '    -r, --recursive              Recursively process filse in sub-directories';
 			$this->_out[] = '        --version                Output version information and exit';
+		} elseif (in_array('--version', $argv)) {
+			$this->_out[] = '  loc v'.self::VERSION;
+			$this->_out[] = '  Copyright (C) Netsilik.';
+			$this->_out[] = '  License EUPL-1.2: European Union Public Licence, v. 1.2 <https://joinup.ec.europa.eu/community/eupl/og_page/eupl>.';
+			$this->_out[] = '  This is free software: you are free to change and redistribute it.';
+			$this->_out[] = '  There is NO WARRANTY, to the extent permitted by law.';
+		} elseif ($argc <= 1 || $operator === null) {
+			$this->_out[] = '  Missing directory operand.';
+			$this->_out[] = '  Try \'loc --help\' for more information.';
+			$this->_exitCode = 1;
 		} else {
 			$this->_processDir($operator, $options);
 		}
 		$this->_out[] = '';
 		
-		echo implode(PHP_EOL, $this->_out);
+		return implode(PHP_EOL, $this->_out);
+	}
+	
+	/**
+	 * @return int
+	 */
+	public function getExitCode()
+	{
+		return $this->_exitCode;
 	}
 
 	/**
@@ -120,7 +136,7 @@ class Loc extends Cli
 	private function _readFileInDir($dir, array $options = [])
 	{
 		if (false === ($dp = @opendir($dir))) {
-			$this->_out = "ERROR: Could not open directory '{$dir}'";
+			$this->_error = "  Could not open directory '{$dir}'";
 			return false;
 		}
 		
@@ -215,7 +231,7 @@ class Loc extends Cli
 				if ($fileMatched) {
 					$matchedFiles++;
 					
-					list($tl, $el, $loc, $cl, $tc) = parseFile($dirNode);
+					list($tl, $el, $loc, $cl, $tc) = $this->_parseFile($dirNode);
 					$totalLines += $tl;
 					$emptyLines += $el;
 					$codeLines += $loc;
@@ -240,9 +256,9 @@ class Loc extends Cli
 	 * 
 	 * @return array
 	 */
-	private function parseFile($filename)
+	private function _parseFile($filename)
 	{
-		$lines = explode("\n", file_get_contents($filename)); // ignoring the fact that the file may have windows line endings, because it doesn't make a difference for our purpose.
+		$lines = explode("\n", file_get_contents($filename));
 		
 		$totalLines = 0;
 		$emptyLines = 0;
@@ -306,8 +322,6 @@ class Loc extends Cli
 					$break; // line is both a comment and code; nothing more to count
 				}
 			}
-			
-		//	echo 'line '.str_pad($totalLines, 2, ' ', STR_PAD_LEFT)." [{$code}, {$comment}, ".($comment > $code ? 1 : 0).']='.($bc?1:0).': {$line}'.PHP_EOL;
 			
 			$codeLines += $code;
 			$commentLines += ($comment > $code) ? 1 : 0;
