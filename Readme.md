@@ -28,7 +28,7 @@ Usage
 Lince of Code counter is a command line scipt:
 
 
-```sh
+```txt
 Usage: loc [OPTION]... DIRECTORY...
 Count the lines of code in the files in the specified DIRECTORY(ies).
 
@@ -41,7 +41,7 @@ Mandatory arguments to long options are mandatory for short options too.
 ```
 
 Count the lines of code in all `php` files in the current directory and all subdirectories:
-```sh
+```txt
 $ loc -rf *.php .
 
 Parsed 11 (*.php) files out of a total of 29 files, in 12 directories and counted:
@@ -53,7 +53,7 @@ Parsed 11 (*.php) files out of a total of 29 files, in 12 directories and counte
 ```
 
 Count the lines of code in all `php` files in the src directory:
-```sh
+```txt
 $ loc -f *.php src
 
 Parsed 1 (*.php) file out of a total of 1 file, in 1 directory and counted:
@@ -65,7 +65,7 @@ Parsed 1 (*.php) file out of a total of 1 file, in 1 directory and counted:
 ```
 
 Count the lines of code in all `php` and `html` files in the current directory and all subdirectories, excluding the vendor directory:
-```sh
+```txt
 $ loc -rf *.php,*.html -i vendor .
 
 Parsed 7 (*.php, *.html) files out of a total of 16 files, in 6 directories and counted:
