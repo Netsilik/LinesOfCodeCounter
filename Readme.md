@@ -5,7 +5,7 @@ Simple utility script for Counting Lines of Code.
 
 ---
 
-European Union Public Licence, v. 1.1
+European Union Public Licence, v. 1.2
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the Licence is distributed on an "AS IS" basis,
