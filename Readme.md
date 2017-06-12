@@ -28,7 +28,7 @@ Usage
 Lince of Code counter is a command line scipt:
 
 
-```bash
+```sh
 Usage: loc [OPTION]... DIRECTORY...
 Count the lines of code in the files in the specified DIRECTORY(ies).
 
@@ -38,4 +38,40 @@ Mandatory arguments to long options are mandatory for short options too.
   -i, --ignore-dir=DIRECTORY   Ignore all files in the directory DIRECTORY
   -r, --recursive              Recursively process filse in sub-directories
       --version                Output version information and exit
+```
+
+Count the lines of code in all `php` files in the current directory and all subdirectories:
+```sh
+$ loc -rf *.php .
+
+Parsed 11 (*.php) files out of a total of 29 files, in 12 directories and counted:
+  1,051 total lines,
+    157 empty lines,
+    734 lines of code,
+    108 comment lines,
+    109 comments in total.
+```
+
+Count the lines of code in all `php` files in the src directory:
+```sh
+$ loc -f *.php src
+
+Parsed 1 (*.php) file out of a total of 1 file, in 1 directory and counted:
+  331 total lines,
+   53 empty lines,
+  247 lines of code,
+   18 comment lines,
+   18 comments in total.
+```
+
+Count the lines of code in all `php` and `html` files in the current directory and all subdirectories, excluding the vendor directory:
+```sh
+$ loc -rf *.php,*.html -i vendor .
+
+Parsed 7 (*.php, *.html) files out of a total of 16 files, in 6 directories and counted:
+  1,466 total lines,
+    108 empty lines,
+  1,322 lines of code,
+     23 comment lines,
+     33 comments in total.
 ```
