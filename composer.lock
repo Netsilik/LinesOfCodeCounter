@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Netsilik/Cli.git",
-                "reference": "01b38f4d00eec9f8b4b618835821a201b9bbf966"
+                "reference": "c7b87917a34f647ac8c0b1024fad15340747af50"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Netsilik/Cli/zipball/01b38f4d00eec9f8b4b618835821a201b9bbf966",
-                "reference": "01b38f4d00eec9f8b4b618835821a201b9bbf966",
+                "url": "https://api.github.com/repos/Netsilik/Cli/zipball/c7b87917a34f647ac8c0b1024fad15340747af50",
+                "reference": "c7b87917a34f647ac8c0b1024fad15340747af50",
                 "shasum": ""
             },
             "require": {
@@ -45,7 +45,7 @@
             "keywords": [
                 "cli"
             ],
-            "time": "2017-06-11 15:41:41"
+            "time": "2017-06-12 15:49:40"
         }
     ],
     "packages-dev": [],
