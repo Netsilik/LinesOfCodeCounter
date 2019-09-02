@@ -2,7 +2,7 @@
     "name": "netsilik/lines-of-code-counter",
     "description": "Standalone utility script for Counting Lines of Code.",
     "keywords": ["development", "helper", "utility"],
-    "type": "porject",
+    "type": "project",
     "license": "EUPL-1.2",
 	"homepage": "https://gitlab.com/Netsilik/LinesOfCodeCounter",
     "authors": [
